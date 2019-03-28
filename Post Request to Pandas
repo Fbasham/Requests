@@ -1,0 +1,18 @@
+import requests
+import datetime
+import pandas as pd
+
+with requests.Session() as s:
+ 
+    login = {'sUsrNam': 'user', 'sUsrPwd': 'password'}    
+    r = s.post('http://website.com/login?', data = login)
+    
+    day, month, year = datetime.datetime.today().strftime('%d/%m/%Y').split('/')   
+    payload = {'dStrTim': f'{year}-{month}-01',
+               'dEndTim': f'{year}-{month}-{day}'}
+    
+    report = s.post('http://website.com/reports?iRptIdx=11&', params = payload)
+    
+    with open('file.html', 'w') as f:
+        f.write(report.text)
+        df = pd.read_html('file.html')
