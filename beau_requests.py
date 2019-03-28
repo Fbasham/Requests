@@ -9,9 +9,9 @@ with requests.Session() as s:
     # regex is used because 'lWebIdx' appears to be dynamically generated upon login, thus,
     # it's found and inserted into the payload for the form data used to generate the report
     
-    login = {'sWebNam': 'fbasham', 'sWebPwd': 'python92', 'Login': 'Login'}
+    login = {'sWebNam': 'user', 'sWebPwd': 'password', 'Login': 'Login'}
     
-    r = s.get('https://beauharnois.nglsupply.com/lognverf.htm?', params = login)
+    r = s.get('https://website/lognverf.htm?', params = login)
     m = re.findall('(lWebIdx=\d+)', r.text)
     m = m[0].split('=')
    
@@ -24,7 +24,7 @@ with requests.Session() as s:
                'dEndTim': f'{month}/{int(day)-1}/{year} 11:59:59 PM',
                'sDbsNam': 'TMSTRN.MDB'}
     
-    report = s.get('https://beauharnois.nglsupply.com/reptprnt.htm?', params = payload)
+    report = s.get('https://website.com/reptprnt.htm?', params = payload)
 
        
     with open('Beau_Customer_Detail_Report.html', 'w') as f:
