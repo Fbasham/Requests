@@ -1,0 +1,32 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar 29 09:17:40 2019
+
+@author: Fbasham
+"""
+
+import requests
+import pandas as pd
+from bs4 import BeautifulSoup
+
+with requests.Session() as s:
+    path = r'H:\FBasham\Daily Downloads\Transflo\\'
+    login = {'UID': 'user', 'PASS': 'password'}
+    
+    terminals = {'926': 'Beau', '20': 'Atlanta', '195': 'Tampa', '927': 'Westboro'}
+    
+    for i in terminals:
+        url = f'https://www.website/service?EVENTFRAMEWORK_EVENT_NAME=DAILY_TRACK_VIEW&TerminalSelectField={i}'
+        report = s.post(url, data = login, verify=False)
+    
+        filename = f'{path}{terminals[i]}_Daily_Track.html'    
+        with open(filename, 'w') as f:
+            f.write(report.text)  
+               
+        # Test with beautifulsoup and pandas to get .csv version from html:
+        soup = BeautifulSoup(report.text, 'html.parser')
+        tables = soup.find_all('table')
+        
+        # index of 14 because that's the table with useful information:        
+        df = pd.read_html(tables[14].prettify())        
+        df[0].to_csv(f'{path}{terminals[i]}_Daily_Track.csv', index=False)
