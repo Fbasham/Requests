@@ -1,0 +1,51 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Apr  3 08:55:42 2019
+
+@author: Fbasham
+"""
+
+import requests
+from bs4 import BeautifulSoup
+from datetime import datetime
+import re
+import csv
+    
+with requests.Session() as s:
+    
+    # regex is used because 'lWebIdx' appears to be dynamically generated upon login, thus,
+    # it's found and inserted into the payload for the form data used to generate the report
+    
+    login = {'sWebNam': 'user', 'sWebPwd': 'password', 'Login': 'Login'}  
+    r = s.get('https://website/lognverf.htm?', params = login)
+    m = re.findall('(lWebIdx=\d+)', r.text)
+    m = m[0].split('=')
+   
+    day, month, year = day, month, year = datetime.today().strftime('%d %m %Y').split()
+    
+    payload = {'lWebIdx': m[1], 
+               'iRepNum': '18', 
+               'iRepDes': '0', 
+               'dStrTim': f'{month}/1/{year} 12:00:00 AM',
+               'dEndTim': f'{month}/{int(day)-1}/{year} 11:59:59 PM',
+               'sDbsNam': 'TMSTRN.MDB'}
+    
+    report = s.get('https://website/reptprnt.htm?', params = payload)    
+    soup = BeautifulSoup(report.content, 'lxml')
+    tables = soup.find_all('table')
+    
+
+    with open('TMS_test.csv', 'w', newline='') as csvfile:
+        # Blank names are included just as placeholders since some rows are missing data (ex. Carrier)
+        fieldnames = ['Blank1', 'Ticket', 'Trans', 'Customer', 'Carrier', 'Driver', 'Trailer', 
+                      'Dest.', 'Date/Time', 'T', 'Blank2', 'Gross', 'Blank3', 'Net']
+        
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for i in tables:
+            rows = i.find_all('tr')   
+            for row in rows:
+                details = row.find_all('td')
+                output = [j.text for j in details]                 #list comprehension, j is a dummy iterator
+                if len(output) is 14:                              #only grabs output if it contains all the info we need
+                    writer.writerow(dict(zip(fieldnames, output)))
