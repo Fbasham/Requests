@@ -1,0 +1,23 @@
+from bs4 import BeautifulSoup
+import csv
+
+with open(r'C:\Users\Bash\Downloads\Grafton & Upton Railroad_files/reports.html', 'r') as file:
+
+    soup = BeautifulSoup(file, 'lxml')
+    div = soup.find_all('div')
+
+    x = [i.span.text.replace('\xa0',' ') if i.span else None for i in div]
+
+    # create a list of the indexes of all None types in x
+    idx = [i for i, _ in enumerate(x) if _ is None]
+
+    #create a list of lists using slices between the None type indexes
+    rail_rows = []
+    truck_rows = []
+    for i in range(len(idx)-1):
+        row = x[idx[i]+1:idx[i+1]]
+        if len(row) in [7,9]:
+            if len(row) is 7:
+                rail_rows.append(row)
+            else:
+                truck_rows.append(row)
