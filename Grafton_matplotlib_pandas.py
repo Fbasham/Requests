@@ -2,7 +2,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import datetime
 
-df = pd.read_csv('H:\FBasham\Python (do not delete code please)\Grafton Inventory Report.csv', thousands=',')
+df = pd.read_csv('Grafton Inventory Report.csv', thousands=',')
 ##df = df.groupby([df['End Time']]).mean()
 
 ##x = df[df['Supplier'] == 'NGL Supply']['End Time']
@@ -41,14 +41,24 @@ x6 = df[df['Supplier'] == 'Patriot'][df['Type'] == 'Truck'].groupby(df['End Time
 ##plt.plot(x5.index, x5['Net'], x6.index, x6['Net'])
 ##plt.show()
 
-pd.plotting.register_matplotlib_converters(explicit=True)
-plt.plot(x3.index, x3['Net'], x4.index, x4['Net'], x5.index, x5['Net'], x6.index, x6['Net'],marker='o')
-plt.title(label='Rail/Truck Summary')
-plt.legend(['NGL Rail', 'NGL Truck', 'PATRIOT Rail', 'PATRIOT Truck'], loc='best')
-plt.show()
 
 #NGL Supply Inventory at current time
 ngl_inv = df['Inventory'].iloc[df[df['Supplier'] == 'NGL Supply']['End Time'].argmax()]
 pat_inv = df['Inventory'].iloc[df[df['Supplier'] == 'Patriot']['End Time'].argmax()]
 
-print(x1['Inventory'].index,x2['Inventory'])
+inv_df = pd.concat([x1['Inventory'],x2['Inventory']], axis=1, sort=True)
+inv_df['Inventory'] = inv_df['Inventory'].bfill()
+inv_df.columns = ['NGL', 'Patriot']
+inv_df['Inventory'] = inv_df['NGL'] + inv_df['Patriot']
+xtime = inv_df.index
+
+
+pd.plotting.register_matplotlib_converters(explicit=True)
+plt.plot(xtime, inv_df['Inventory'], x3.index, x3['Net'], x4.index, x4['Net'], x5.index, x5['Net'], x6.index, x6['Net'],marker='o')
+plt.title(label='Rail/Truck Summary')
+plt.legend(['Inventory', 'NGL Rail', 'NGL Truck', 'PATRIOT Rail', 'PATRIOT Truck'], loc='best')
+
+for i, txt in enumerate(inv_df['Inventory']):
+    plt.annotate(f'{txt//1000}k', (xtime[i], inv_df['Inventory'][i]+2000))
+
+plt.show()
