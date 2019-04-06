@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import datetime
 
 
+
 df = pd.read_csv('Grafton Inventory Report.csv', thousands=',')
 
 #Convert to useful units of measure
@@ -26,17 +27,18 @@ inv_df = pd.concat([x1['Inventory'],x2['Inventory']], axis=1, sort=True)
 inv_df['Inventory'] = inv_df['Inventory'].bfill().ffill()
 inv_df.columns = ['NGL', 'Patriot']
 inv_df['Inventory'] = inv_df['NGL'] + inv_df['Patriot']
-inv_xtime = inv_df.index
 
 
 #Begin Plotting
 pd.plotting.register_matplotlib_converters(explicit=True)
-plt.plot(inv_xtime, inv_df['Inventory'], x3.index, x3['Net'], x4.index, x4['Net'], x5.index, x5['Net'], x6.index, x6['Net'],
+plt.plot(inv_df.index, inv_df['Inventory'], x3.index, x3['Net'], x4.index, x4['Net'], x5.index, x5['Net'], x6.index, x6['Net'],
          marker='o',markersize=3, linewidth=0.75)
 plt.title(label='Grafton Inventory Summary')
 plt.xlabel('Time')
 plt.ylabel('USG')
+plt.xticks(rotation = 25)
 plt.legend(['Inventory', 'NGL Rail', 'NGL Truck', 'PATRIOT Rail', 'PATRIOT Truck'], loc='best', fontsize='small')
+
 
 
 #Used for generating marker annotations
