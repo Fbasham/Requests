@@ -1,3 +1,4 @@
+'''Author: Frank Basham'''
 import pandas as pd
 import matplotlib.dates as mdates
 from matplotlib import pyplot as plt
@@ -49,10 +50,10 @@ def grafton(arr):
     #Begin Plotting
     pd.plotting.register_matplotlib_converters(explicit=True)
     fig, ax = plt.subplots()
-    plt.plot(inventory(arr).index, inventory(arr)['Inventory'], marker='.',markersize=7, linewidth=0.75)
+    plt.plot(inventory(arr).index, inventory(arr)['Inventory'], marker='*',markersize=7, linewidth=0.85)
     for s in arr:
         for i in [1,2]:
-            plt.plot(supplier_data(s)[i].index, supplier_data(s)[i]['Net'], marker='.',markersize=7, linewidth=0.75)
+            plt.plot(supplier_data(s)[i].index, supplier_data(s)[i]['Net'], '--', marker='.',markersize=7, linewidth=0.75)
     plt.title(label='Grafton Inventory Summary')
     plt.xlabel('Time')
     plt.ylabel('USG')
