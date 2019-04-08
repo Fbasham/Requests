@@ -16,7 +16,7 @@ def grafton(arr):
     df['End Time'] = pd.to_datetime(df['End Time'], yearfirst=True)
     today = datetime.date.today()
     period = pd.Period(today, freq='M')
-    d = pd.DatetimeIndex(start=period.start_time, end=today, freq='D')
+    d = pd.date_range(start=period.start_time, end=today, freq='D')
     dates = pd.DataFrame({'placeholder': 0}, index=d.date)
 
 
