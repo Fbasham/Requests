@@ -1,16 +1,31 @@
-'''Author: Frank Basham'''
+"""
+Created on Wed Apr  3 08:55:42 2019
+
+@author: Fbasham
+"""
+
 import pandas as pd
 import matplotlib.dates as mdates
 from matplotlib import pyplot as plt
 import datetime
+import grafton_request
 
 
-df = pd.read_csv('Grafton Inventory Report.csv', thousands=',')
+df = pd.read_csv(r'H:\FBasham\Python (do not delete code please)\Grafton Inventory Report.csv', thousands=',')
 
 all_suppliers = list(set(df['Supplier']))
 default = ['NGL Supply', 'Patriot']
-def grafton(arr):
-    
+def grafton(arr, new_data=False):
+   
+    #request new data if True.  This should use threading to wait until request is obtained, but this works for quick immplementation
+    if new_data is True:
+        try:
+            grafton_request.main()
+        except Exception as e:
+            print(e)
+            print('Using old data if available in Fbasham\'s folder')
+                 
+        
     #Convert to useful units of measure and define dataframe of DateIndexes for current month, used for extending data to current day
     df['Inventory'] = df['Inventory'].apply(pd.to_numeric)
     df['End Time'] = pd.to_datetime(df['End Time'], yearfirst=True)
@@ -75,5 +90,5 @@ def grafton(arr):
     plt.show()
 
 if __name__ == '__main__':    
-    grafton(default)
-    grafton(all_suppliers)
+    grafton(default, new_data=True)
+    grafton(all_suppliers, new_data=True)
