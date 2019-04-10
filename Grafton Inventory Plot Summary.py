@@ -46,7 +46,7 @@ def grafton(arr, new_data=False):
         x_sum_rail['Net'] = x_sum_rail['Net'] + x_sum_rail['placeholder']
         x_sum_truck = pd.concat([x_sum_truck, dates], axis=1, sort=True).fillna(0)
         x_sum_truck['Net'] = x_sum_truck['Net'] + x_sum_truck['placeholder']
-
+        
         return [x_mean_date, x_sum_rail, x_sum_truck]
 
 
@@ -59,6 +59,7 @@ def grafton(arr, new_data=False):
         combined_inventory['Inventory'] = combined_inventory.bfill().ffill()
         combined_inventory.columns = arr + ['placeholder']
         combined_inventory['Inventory'] = sum([combined_inventory[i] for i in arr])
+
         return combined_inventory
 
     
@@ -85,7 +86,8 @@ def grafton(arr, new_data=False):
     marker_arr = [inventory(arr)['Inventory']] + [supplier_data(s)[i]['Net'] for s in arr for i in [1,2]]
     for i, frame in enumerate(marker_arr):
         for j, txt in enumerate(frame):
-            plt.annotate(f'{int(txt/1000)}k', (frame.index[j], frame.values[j]+2000)).set_fontsize(7.5)
+            if txt != 0:
+                plt.annotate(f'{int(txt/1000)}k', (frame.index[j], frame.values[j]+2000)).set_fontsize(7.5)
 
     plt.show()
 
