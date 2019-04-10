@@ -84,7 +84,7 @@ def grafton(arr, new_data=False):
 
     #Used for generating marker annotations
     marker_arr = [inventory(arr)['Inventory']] + [supplier_data(s)[i]['Net'] for s in arr for i in [1,2]]
-    for i, frame in enumerate(marker_arr):
+    for _ , frame in enumerate(marker_arr):
         for j, txt in enumerate(frame):
             if txt != 0:
                 plt.annotate(f'{int(txt/1000)}k', (frame.index[j], frame.values[j]+2000)).set_fontsize(7.5)
