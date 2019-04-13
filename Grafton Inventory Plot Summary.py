@@ -31,35 +31,32 @@ def grafton(arr, new_data=False):
     df['End Time'] = pd.to_datetime(df['End Time'], yearfirst=True)
     today = datetime.date.today()
     period = pd.Period(today, freq='M')
-    d = pd.date_range(start=period.start_time, end=today, freq='D')
-    dates = pd.DataFrame({'placeholder': 0}, index=d.date)
+    dates = pd.date_range(start=period.start_time, end=today, freq='D')
 
 
     def supplier_data(supplier):
         ''' returns x-axis cooridnates and grouped volumes by truck and rail respecitively'''
-        x_mean_date = df[df['Supplier'] == supplier].groupby(df['End Time'].dt.date).last()
-        x_sum_rail = df[(df['Supplier'] == supplier) & (df['Type'] == 'Rail')].groupby(df['End Time'].dt.date).sum()
-        x_sum_truck = df[(df['Supplier'] == supplier) & (df['Type'] == 'Truck')].groupby(df['End Time'].dt.date).sum().abs()
+        day_inventory = df[df['Supplier'] == supplier][['Inventory']].groupby(df['End Time'].dt.date).last()
+        sum_rail = df[(df['Supplier'] == supplier) & (df['Type'] == 'Rail')][['Net']].groupby(df['End Time'].dt.date).sum()
+        sum_truck = df[(df['Supplier'] == supplier) & (df['Type'] == 'Truck')][['Net']].groupby(df['End Time'].dt.date).sum().abs()
         
         #Extend the above dataframes to current date and nornmalize to 0 if no liftings/offloads in report:
-        x_sum_rail = pd.concat([x_sum_rail, dates], axis=1, sort=True).fillna(0)
-        x_sum_rail['Net'] = x_sum_rail['Net'] + x_sum_rail['placeholder']
-        x_sum_truck = pd.concat([x_sum_truck, dates], axis=1, sort=True).fillna(0)
-        x_sum_truck['Net'] = x_sum_truck['Net'] + x_sum_truck['placeholder']
-        
-        return [x_mean_date, x_sum_rail, x_sum_truck]
+        day_inventory = day_inventory.reindex(dates).bfill().ffill()
+        sum_rail = sum_rail.reindex(dates).fillna(0)
+        sum_truck = sum_truck.reindex(dates).fillna(0)
+
+        return [day_inventory, sum_rail, sum_truck]
 
 
     def inventory(arr):
         ''' Generate dataframe of supplier inventory, n defaults to all suppliers at the terminal if no kwargs passed.
             The 'dates' dataframe is created in order to increment current month's date if no inventory is reported from
             in the downloaded reports. Placeholder column needs to exist, but doesn't impact inventory calc '''
-        inventories = [supplier_data(i)[0]['Inventory'] for i in arr]
-        combined_inventory = pd.concat(inventories + [dates], axis=1, sort=True)
-        combined_inventory['Inventory'] = combined_inventory.bfill().ffill()
-        combined_inventory.columns = arr + ['placeholder']
+        inventories = [supplier_data(i)[0] for i in arr]
+        combined_inventory = pd.concat(inventories, axis=1, sort=True)
+        combined_inventory.columns = arr 
         combined_inventory['Inventory'] = sum([combined_inventory[i] for i in arr])
-
+        
         return combined_inventory
 
     
