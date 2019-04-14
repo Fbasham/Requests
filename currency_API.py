@@ -36,10 +36,7 @@ def get_rates(base, countries, start, end):
         exchange.append(rates)
 
     df = pd.DataFrame(exchange, index=dates)
-
-    df.plot(title=f'{base} to {", ".join(countries)}')
-    plt.xlabel(xlabel='Date')
-    plt.ylabel(ylabel=f'{base}')    
+    df.plot(subplots=True, sharex=True)  
     plt.show()
 
 
