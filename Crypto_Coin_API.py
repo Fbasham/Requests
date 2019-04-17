@@ -35,9 +35,10 @@ def top_coins(top, timeframe):
         frame = pd.DataFrame({coin_name: prices}, index=dates).astype(float).drop_duplicates()
         dfs.append(frame)
 
-
+    
     df = pd.concat(dfs, axis=1, sort=True).sort_index()
-    normalized_df=(df-df.mean())/df.std()
+    #normalized_df=(df-df.mean())/df.std()
+    normalized_df=(df-df.min())/(df.max()-df.min())
     normalized_df.plot()
     plt.show()
 
