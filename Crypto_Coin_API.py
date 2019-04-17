@@ -5,12 +5,6 @@ Created on Tue Apr 16 16:51:18 2019
 """
 
 import requests
-from datetime import datetime
-import pandas as pd
-import matplotlib.pyplot as plt
-
-
-import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -23,7 +17,6 @@ def top_coins(top, timeframe):
     alias = {}
     for i in r.json()['data']['coins'][:top]:
         alias[i['id']] = i['name']
-
 
     df = pd.DataFrame()
     for coin_id, coin_name in alias.items():
