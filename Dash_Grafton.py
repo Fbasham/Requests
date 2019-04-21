@@ -99,10 +99,7 @@ app.layout = html.Div(children=[
         id='truck_liftings-graph',
         figure={
             'data': [
-                    {'x': truck_liftings(all_suppliers).index, 'y': truck_liftings(all_suppliers)['NGL Supply'], 'type': 'line', 'name': 'NGL Supply'},
-                    {'x': truck_liftings(all_suppliers).index, 'y': truck_liftings(all_suppliers)['Patriot'], 'type': 'line', 'name': 'Patriot'},
-                    {'x': truck_liftings(all_suppliers).index, 'y': truck_liftings(all_suppliers)['Ray Energy'], 'type': 'line', 'name': 'Ray Energy'},
-                    {'x': truck_liftings(all_suppliers).index, 'y': truck_liftings(all_suppliers)['NGL Wholesale'], 'type': 'line', 'name': 'NGL Wholesale'}
+                    {'x': truck_liftings(all_suppliers).index, 'y': truck_liftings(all_suppliers)[i], 'type': 'line', 'name': i} for i in all_suppliers
             ],
             'layout': {
                 'title': f"{' & '.join(all_suppliers)} Truck Liftings"
@@ -113,11 +110,8 @@ app.layout = html.Div(children=[
         id='rail_offloads-graph',
         figure={
             'data': [
-                    {'x': rail_offloads(all_suppliers).index, 'y': rail_offloads(all_suppliers)['NGL Supply'], 'type': 'line', 'name': 'NGL Supply'},
-                    {'x': rail_offloads(all_suppliers).index, 'y': rail_offloads(all_suppliers)['Patriot'], 'type': 'line', 'name': 'Patriot'},
-                    {'x': rail_offloads(all_suppliers).index, 'y': rail_offloads(all_suppliers)['Ray Energy'], 'type': 'line', 'name': 'Ray Energy'},
-                    {'x': rail_offloads(all_suppliers).index, 'y': rail_offloads(all_suppliers)['NGL Wholesale'], 'type': 'line', 'name': 'NGL Wholesale'}
-                    
+                    {'x': rail_offloads(all_suppliers).index, 'y': rail_offloads(all_suppliers)[i], 'type': 'line', 'name': i} for i in all_suppliers
+                     
             ],
             'layout': {
                 'title': f"{' & '.join(all_suppliers)} Rail Offloads"
