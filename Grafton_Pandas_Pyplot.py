@@ -12,7 +12,7 @@ import grafton_request
 
 df = pd.read_csv(r'H:\FBasham\Python (do not delete code please)\Grafton Inventory Report.csv', thousands=',')
 
-all_suppliers = list(set(df['Supplier']))
+all_suppliers = df['Supplier'].unique()
 default = ['NGL Supply', 'Patriot']
 def grafton(arr, new_data=False):
    
@@ -53,7 +53,7 @@ def grafton(arr, new_data=False):
         inventories = [supplier_data(i)[0] for i in arr]
         combined_inventory = pd.concat(inventories, axis=1, sort=True)
         combined_inventory.columns = arr 
-        combined_inventory['Inventory'] = sum([combined_inventory[i] for i in arr])    
+        combined_inventory['Inventory'] = combine_inventory.sum(axis=1) 
         return combined_inventory
 
 
