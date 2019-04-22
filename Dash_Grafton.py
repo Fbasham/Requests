@@ -1,13 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Apr 22 07:43:42 2019
+
+@author: Fbasham
+"""
+
 import pandas as pd
-from matplotlib import pyplot as plt
 import datetime
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from dash.dependencies import Input, Output
 
 
-
-df = pd.read_csv(r'Grafton Inventory Report.csv', thousands=',')
+df = pd.read_csv(r'H:\FBasham\Python (do not delete code please)\Grafton Inventory Report.csv', thousands=',')
 
 all_suppliers = df['Supplier'].unique()
 default = ['NGL Supply', 'Patriot']
@@ -42,7 +48,6 @@ def inventory(arr):
     inventories = [supplier_data(i)[0] for i in arr]
     combined_inventory = pd.concat(inventories, axis=1, sort=True)
     combined_inventory.columns = arr 
-    #combined_inventory['Inventory'] = sum([combined_inventory[i] for i in arr])
     combined_inventory['Inventory'] = combined_inventory.sum(axis=1)
     return combined_inventory
 
@@ -69,58 +74,76 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div(children=[
     html.H1(children='Grafton Inventory'),
 
-    html.Div(children='''
-        See the MTD Inventory
-    '''),
 
     dcc.Graph(
         id='inventory-graph',
         figure={
             'data': [
-                {'x': inventory(default).index, 'y': inventory(default)['Inventory'], 'type': 'bar', 'name': f"{','.join(default)} Inventory"}
+                {'x': inventory(default).index, 'y': inventory(default)['Inventory'], 'type': 'bar', 'marker': {'color': 'crimson'}, 'name': f"{' & '.join(default)} Inventory"}
             ],
             'layout': {
                 'title': f"{' & '.join(default)} Inventory"
             }
         }
     ),
+    
         dcc.Graph(
         id='inventory-graph2',
         figure={
             'data': [
-                {'x': inventory(all_suppliers).index, 'y': inventory(all_suppliers)['Inventory'], 'type': 'line', 'name': f"{','.join(all_suppliers)} Inventory"}
+                {'x': inventory(all_suppliers).index, 'y': inventory(all_suppliers)['Inventory'], 'type': 'bar', 'name': 'Combined Inventory'}
             ],
             'layout': {
-                'title': f"{' & '.join(all_suppliers)} Inventory"
+                'title': 'Combined Inventory'
             }
         }
     ),
+             
+        html.Div([
+                dcc.Dropdown(
+                    id='supplier_name_rail',
+                    options=[{'label': i, 'value': i} for i in all_suppliers],
+                    value= all_suppliers,
+                    multi=True
+                )]),
+       
         dcc.Graph(
-        id='truck_liftings-graph',
-        figure={
-            'data': [
-                    {'x': truck_liftings(all_suppliers).index, 'y': truck_liftings(all_suppliers)[i], 'type': 'line', 'name': i} for i in all_suppliers
-            ],
-            'layout': {
-                'title': f"{' & '.join(all_suppliers)} Truck Liftings"
-            }
-        }
-    ),
-        dcc.Graph(
-        id='rail_offloads-graph',
-        figure={
-            'data': [
-                    {'x': rail_offloads(all_suppliers).index, 'y': rail_offloads(all_suppliers)[i], 'type': 'line', 'name': i} for i in all_suppliers
-                     
-            ],
-            'layout': {
-                'title': f"{' & '.join(all_suppliers)} Rail Offloads"
-            }
-        }
-    )
+        id='rail_offloads-graph'),
 
+
+        html.Div([
+                dcc.Dropdown(
+                    id='supplier_name_truck',
+                    options=[{'label': i, 'value': i} for i in all_suppliers],
+                    value= all_suppliers,
+                    multi=True
+                )]),
+        
+        dcc.Graph(
+        id='truck_liftings-graph')
     
 ])
+        
+        
+        
+@app.callback(
+        Output('rail_offloads-graph', 'figure'),
+        [Input('supplier_name_rail', 'value')])
+def update_rail(suppliers):
+    
+    return {'data': [{'x': rail_offloads(suppliers).index, 'y': rail_offloads(suppliers)[i], 'type': 'line','name': i} for i in suppliers],
+            'layout': {'title': 'Rail Offloads', 'colorway': ['salmon', 'limegreen', 'dodgerblue', 'violet']}}
 
+
+@app.callback(
+         Output('truck_liftings-graph', 'figure'),
+        [Input('supplier_name_truck', 'value')])
+def update_truck(suppliers):
+    
+    return {'data': [{'x': truck_liftings(suppliers).index, 'y': truck_liftings(suppliers)[i], 'type': 'line', 'name': i} for i in suppliers],
+            'layout': {'title': 'Truck Liftings'}}
+                                 
+                    
+           
 if __name__ == '__main__':
     app.run_server(debug=False)
