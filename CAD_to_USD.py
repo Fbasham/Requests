@@ -8,21 +8,16 @@ Created on Fri Jan 18 11:24:37 2019
 import requests
 from bs4 import BeautifulSoup
 
-'''
-page requests the URL 
-soup parses the html
-conc finds the class of the output result of CAD to USD
-'''
+def convert_money(from_, to, amount):
+    url = 'https://www.x-rates.com/calculator/'     
+    payload = {'from': from_, 'to': to, 'amount': amount}    
+    page = requests.get(url, params=payload)
+    
+    soup = BeautifulSoup(page.text, 'lxml')
+    conv = soup.find(class_ = 'ccOutputRslt')
+    
+    rate = float(conv.text.split()[0])
+    print(f'{amount} {from_} = {rate} {to}')
 
-page = requests.get('https://www.x-rates.com/calculator/?from=CAD&to=USD&amount=1')
-soup = BeautifulSoup(page.text, 'html.parser')
-conv = soup.find(class_ = 'ccOutputRslt')
-
-
-'''
-[0:8] returns slice of the string from 'conv' because 'conv' returns ('x.xxxxxxx USD').  
-Float returns the string to a float value
-''' 
-
-rate = float(conv.get_text()[0:8])
-print(rate)
+#Example function call    
+convert_money('CAD', 'USD', 1000)
