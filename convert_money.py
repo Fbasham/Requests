@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Jan 18 11:24:37 2019
-
 @author: Fbasham
-
 """
+
 import requests
 from bs4 import BeautifulSoup
+
 
 def convert_money(from_, to, amount):
     url = 'https://www.x-rates.com/calculator/'     
