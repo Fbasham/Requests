@@ -11,11 +11,11 @@ import csv
 
 with requests.Session() as s:
     
-    login = {'Id': 'E12V2', 'pwd': 'Legend11'}
+    login = {'Id': 'username', 'pwd': 'password'}
     auth = s.post('https://accessns.nscorp.com/accessNS/rest/auth/login', json=login)
         
     headers = {'CSRFTOKEN': auth.json()['response']['token']}    
-    payload = {'userId': 'E12V2', 'classCode"': 'B15', 'stationCode': 'CC332'}  
+    payload = {'userId': 'username', 'classCode"': 'B15', 'stationCode': 'CC332'}  
     
     inventory = s.post('https://accessns.nscorp.com/accessNS/rest/backend-v2/ServicesIndustrial/services/industrial2/v2/onsite/details', 
                  json=payload, headers=headers)  
