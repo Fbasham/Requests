@@ -1,3 +1,11 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jul 11 10:53:07 2019
+
+@author: Fbasham
+"""
+
+
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
 
@@ -10,6 +18,7 @@ class chunkedDF:
         self.chunksize = chunksize or self.length//10
         self.chunks = (self.df[chunk:chunk+self.chunksize] for chunk in range(0, self.length, self.chunksize))
         self.threadpool = ThreadPoolExecutor()
+        self.columns = df.columns
 
     def row_sum(self):
         with self.threadpool as executor:
@@ -28,14 +37,8 @@ class chunkedDF:
 
     def gb_sum(self, columns):
         def grp_sum(chunk):
-            return chunk.groupby(columns).sum()        
+            return chunk.groupby(by=columns, as_index=False).sum()      
         with self.threadpool as executor:
             result = executor.map(grp_sum, self.chunks)
-            return pd.concat(result).groupby(columns).mean()
-        
-            
-
-
-
-
+            return pd.concat(result).groupby(by=columns).sum()
 
