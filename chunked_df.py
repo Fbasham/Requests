@@ -8,22 +8,24 @@ Created on Thu Jul 11 10:53:07 2019
 
 from concurrent.futures import ThreadPoolExecutor
 import pandas as pd
+from ast import literal_eval
 
 
+@pd.api.extensions.register_dataframe_accessor("chunk")
 class chunkedDF:
 
     def __init__(self, df, chunksize=None):
         self.df = df
         self.length = len(df)
-        self.chunksize = chunksize or self.length//7 if self.length > 500_000 else self.length
-        self.num_chunks = pd.np.ceil(self.length/self.chunksize).astype(int)
-        self.chunks = (self.df[chunk:chunk+self.chunksize] for chunk in range(0, self.length, self.chunksize))
+        self.chunksize = chunksize if chunksize else self.length//7 if self.length > 500_000 else self.length
+        self.chunks = (df[chunk:chunk+self.chunksize] for chunk in range(0, self.length, self.chunksize))
         self.threadpool = ThreadPoolExecutor()
-        self.columns = df.columns
 
+        
     @classmethod
-    def from_np_rand(cls, rows, cols, columns=None):
-        return cls(pd.DataFrame(pd.np.random.rand(rows, cols), columns=columns))    
+    def from_randint(cls, low, high, rows, cols, columns=None, chunksize=None):
+        return cls(pd.DataFrame(pd.np.random.randint(low, high, (rows, cols)), columns=columns), chunksize=chunksize)
+    
     
     def row_sum(self):
         with self.threadpool as executor:
@@ -55,5 +57,15 @@ class chunkedDF:
         with self.threadpool as executor:
             result = executor.map(grp_mean, self.chunks)
             return pd.concat(result).groupby(by=columns).mean()
-        
+
+
+    def test(self, columns, aggfunc):
+        def tgroup(chunk):
+            return eval(f'chunk.groupby(by={columns}, as_index=False).{aggfunc}()')
+        with self.threadpool as executor:
+            result = executor.map(tgroup, self.chunks)
+            return eval(f'pd.concat(result).groupby(by={columns}).{aggfunc}()')
+
+
+    
         
