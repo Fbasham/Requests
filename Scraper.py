@@ -1,5 +1,6 @@
 import asyncio
 from requests_html import AsyncHTMLSession
+import time
 
 
 class Scraper:
@@ -22,6 +23,7 @@ class Scraper:
         
         async def work(session, method, url):
             r = await session.request(method, url)
+            print(f'got response from: {url}')
             return r
 
         async def main():
@@ -35,11 +37,13 @@ class Scraper:
 
     
 
-urls = ('https://www.google.com', 'https://www.reddit.com', 'https://www.python.org')
+urls = ('https://www.google.com', 'https://www.reddit.com', 'https://www.python.org',
+        'https://stackoverflow.com/questions', 'https://httpbin.org/')
+
 s = Scraper(urls)
 responses = s.async_scrape('get')
 for r in responses:
-    print(len(r.content))
+    print(r)
 
 
 
