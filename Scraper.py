@@ -3,7 +3,7 @@ import asyncio
 from functools import wraps, partial
 
 
-class Test():
+class Scraper():
 
     def __init__(self, urls):
         self.urls = urls
@@ -40,7 +40,7 @@ async def work(session, method, url):
 urls = ('https://www.google.com', 'https://www.reddit.com', 'https://www.python.org',
         'https://stackoverflow.com/questions', 'https://httpbin.org/')
 
-r = Test(urls)
+r = Scraper(urls)
 r.tasks = (work(method='get', url=url) for url in urls)
 for r in r.scrape():
     print(r.content)
