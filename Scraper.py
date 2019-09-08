@@ -1,49 +1,49 @@
-import asyncio
 from requests_html import AsyncHTMLSession
-import time
+import asyncio
+from functools import wraps, partial
 
 
-class Scraper:
-    
-    def __init__(self, urls=None):
-        self._urls = urls
+class Test():
 
-    @property
-    def urls(self):
-        return self._urls
-
-    @urls.setter
-    def urls(self, new_urls):
-        if not isinstance(new_urls, (list, set, tuple)):
-            raise TypeError('urls need to be iterable')             
-        self._urls = new_urls
-
-
-    def async_scrape(self, method):
+    def __init__(self, urls):
+        self.urls = urls
+        self.tasks = None
         
-        async def work(session, method, url):
-            r = await session.request(method, url)
-            print(f'got response from: {url}')
-            return r
+    def async_run(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            result = asyncio.run(func(self, *args, **kwargs))
+            return result
+        return wrapper    
 
-        async def main():
-            session = AsyncHTMLSession()
-            tasks = (work(session, method, url) for url in self.urls)
-            results = await asyncio.gather(*tasks)
-            return results
+    @async_run
+    async def scrape(self):
+        session = AsyncHTMLSession()
+        tasks = (task(session) for task in self.tasks)
+        return await asyncio.gather(*tasks)
 
-        return asyncio.run(main())
-        
 
-    
+
+def tasker(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        task = partial(func, *args, **kwargs)
+        return task
+    return wrapper
+
+@tasker
+async def work(session, method, url):
+    return await session.request(method, url)
+
+
 
 urls = ('https://www.google.com', 'https://www.reddit.com', 'https://www.python.org',
         'https://stackoverflow.com/questions', 'https://httpbin.org/')
 
-s = Scraper(urls)
-responses = s.async_scrape('get')
-for r in responses:
-    print(r)
-
+r = Test(urls)
+r.tasks = (work(method='get', url=url) for url in urls)
+for r in r.scrape():
+    print(r.content)
+    
 
 
