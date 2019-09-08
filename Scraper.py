@@ -1,49 +1,43 @@
 from requests_html import AsyncHTMLSession
-import asyncio
 from functools import wraps, partial
+import asyncio
 
 
-class Scraper():
+class Test():
 
-    def __init__(self, urls):
-        self.urls = urls
-        self.tasks = None
+    def __init__(self, tasks=None):
+        self.tasks = tasks
         
-    def async_run(func):
+    def _async_run(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             result = asyncio.run(func(self, *args, **kwargs))
             return result
-        return wrapper    
+        return wrapper
 
-    @async_run
+    def _tasker(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            task = partial(func, *args, **kwargs)
+            return task
+        return wrapper
+
+    @_tasker
+    async def work(session, **kwargs):
+        return await session.request(**kwargs)
+
+    @_async_run
     async def scrape(self):
         session = AsyncHTMLSession()
-        tasks = (task(session) for task in self.tasks)
+        tasks = (task(session=session) for task in self.tasks)
         return await asyncio.gather(*tasks)
 
 
-
-def tasker(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        task = partial(func, *args, **kwargs)
-        return task
-    return wrapper
-
-@tasker
-async def work(session, method, url):
-    return await session.request(method, url)
-
-
-
+    
 urls = ('https://www.google.com', 'https://www.reddit.com', 'https://www.python.org',
         'https://stackoverflow.com/questions', 'https://httpbin.org/')
 
-r = Scraper(urls)
-r.tasks = (work(method='get', url=url) for url in urls)
-for r in r.scrape():
-    print(r.content)
-    
+tasks = (r.work(method='get', url=url) for url in urls)
 
-
+r = Test(tasks)
+print(r.scrape())
