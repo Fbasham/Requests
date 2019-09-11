@@ -11,9 +11,7 @@ class Test:
         return wrapper
 
     def tasker(func):
-        '''this was intended so users could eventually add functionality to the work function
-           as of 10 Sept 2019, I have yet to implement this, so in theory, the decorator on the work
-           function isn't necessary, nor is the use of functool.partial'''
+        '''this function isn't necessary and might become deprecated in the future'''
         def wrapper(*args, **kwargs):
             return partial(func, *args, **kwargs)
         return wrapper
