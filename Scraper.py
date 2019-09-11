@@ -23,7 +23,7 @@ class Test:
     @async_run
     async def scrape(self, urls, session=None, **kwargs):  
         s = session or AsyncHTMLSession()
-        s.loop= asyncio.get_event_loop()
+        s.loop = asyncio.get_event_loop()
         tasks = (self.work(url=url, **kwargs)(s) for url in urls)
         return await asyncio.gather(*tasks)
     
