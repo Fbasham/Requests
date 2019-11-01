@@ -22,7 +22,7 @@ class Jobs:
         self.headless = headless
 
     @property
-    def links(self):
+    def urls(self):
         '''returns list of job urls'''
         assert hasattr(self, '_jobs'), 'must run get_all_jobs to access this atrribute'
         return self._jobs
@@ -32,6 +32,27 @@ class Jobs:
         '''returns list of request response objects'''
         assert hasattr(self, '_responses'), 'must run get_all_jobs to access this atrribute'
         return self._responses
+
+
+    def _num_jobs(self, html):
+        self._internal_jobs = None
+        self._external_jobs = None
+        self._pages = {'internal': None, 'external': None}
+
+        try:
+            self._internal_jobs = int(html.search('Internal jobs ({})')[0])
+            self._pages['internal'] = ceil(self._internal_jobs/20)
+        except:
+            print('Internal jobs not found')
+
+        try:
+            self._external_jobs = int(html.search('Jobs open to the public ({})')[0])
+            self._pages['external'] = ceil(self._external_jobs/20)
+        except:
+            print('External jobs not found')
+
+        return self
+    
     
     def get_all_jobs(self):
         
@@ -42,6 +63,7 @@ class Jobs:
             options = Options()
             if self.headless:
                 options.add_argument('--headless')
+            options.add_experimental_option('useAutomationExtension', False)
             driver = webdriver.Chrome(options=options)
             driver.get(f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage=1')
             time.sleep(5)
@@ -50,17 +72,24 @@ class Jobs:
             wait.until(EC.element_to_be_clickable((By.XPATH, '//a[contains(text(),"Next")]')))
             content = driver.page_source
             html = HTML(html=content)
-            total_jobs = int(html.search('Jobs open to the public ({})')[0])
-            total_pages = ceil(total_jobs/20)
 
-            for page_num in range(1, total_pages+1):
-                print(f'getting page {page_num}')
-                driver.get(f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage={page_num}')
-                content = driver.page_source
-                html = HTML(html=content)
-                links = html.find('a[href*="poster"]')
-                for link in links:
-                    jobs.append(link)
+            self._num_jobs(html)
+
+            for job_type in self._pages:
+                total_pages = self._pages.get(job_type)
+                if total_pages:
+
+                    for page_num in range(1, total_pages+1):
+                        print(f'getting page {page_num}')
+                        if job_type == 'internal':
+                            driver.get(f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage={page_num}&tab=1')
+                        if job_type =='external':
+                            driver.get(f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage={page_num}&tab=2')
+                        content = driver.page_source
+                        html = HTML(html=content)
+                        links = html.find('a[href*="poster"]')
+                        for link in links:
+                            jobs.append(link)
 
             driver.close()
 
@@ -75,29 +104,34 @@ class Jobs:
 
                 content = await page.content()
                 html = HTML(html=content)
-                total_jobs = int(html.search('Jobs open to the public ({})')[0])
-                total_pages = ceil(total_jobs/20)
-                
-                for page_num in range(1, total_pages+1):
+                self._num_jobs(html)
 
-                    if self.headless:
-                        if page_num%10 == 0:
-                            await page.close()
-                            await browser.close()
-                            browser = await launch({'args': ['--no-sandbox'], 'headless': self.headless})
-                            page = await browser.newPage()
-                            await page.goto(f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage=1')
-                            await asyncio.sleep(3)
-                    
-                    print(f'getting page {page_num}')
-                    target = f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage={page_num}'
-                    await page.goto(target)     
-                    content = await page.content()                    
-                    html = HTML(html=content)
-                    links = html.find('a[href*="poster"]')
-                    for link in links:
-                        jobs.append(link)
-                        
+                for job_type in self._pages:
+                    if self._pages.get(job_type):                
+                
+                        for page_num in range(1, total_pages+1):
+
+                            if self.headless:
+                                if page_num%10 == 0:
+                                    await page.close()
+                                    await browser.close()
+                                    browser = await launch({'args': ['--no-sandbox'], 'headless': self.headless})
+                                    page = await browser.newPage()
+                                    await page.goto(f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage=1')
+                                    await asyncio.sleep(3)
+                            
+                            print(f'getting page {page_num}')
+                            if job_type == 'internal':
+                                target = f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage={page_num}&tab=1'
+                            if job_type == 'external':
+                                target = f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage={page_num}&tab=2'
+                            await page.goto(target)     
+                            content = await page.content()                    
+                            html = HTML(html=content)
+                            links = html.find('a[href*="poster"]')
+                            for link in links:
+                                jobs.append(link)
+                                
                 await browser.close()
             asyncio.run(main())
             
@@ -111,22 +145,27 @@ class Jobs:
                     r.html.render(sleep=3)
                     return s, r
                 _, r = get_session()
-                total_jobs = int(r.html.search('Jobs open to the public ({})')[0])
-                total_pages = ceil(total_jobs/20)
 
-                for page_num in range(1, total_pages+1):
-                    if page_num%10 == 0:
-                        s, _ = get_session()
-                    print(f'getting page {page_num}')              
-                    target = f'https://emploisfp-psjobs.cfp-psc.gc.ca/psrs-srfp/applicant/page2440?requestedPage={page_num}'
-                    r = s.get(target)
-                    r.html.render()
-                    links = r.html.find('a[href*="poster"]')
-                    for link in links:
-                        jobs.append(link)
-                    print(len(links))
+                self._num_jobs(r.html)
 
-                return jobs
+                for job_type in self._pages:
+                    if self._pages.get(job_type):                                  
+
+                        for page_num in range(1, total_pages+1):
+                            if page_num%10 == 0:
+                                s, _ = get_session()
+                            print(f'getting page {page_num}')              
+                            if job_type == 'internal':
+                                target = f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage={page_num}&tab=1'
+                            if job_type == 'external':
+                                target = f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage={page_num}&tab=2'
+                            r = s.get(target)
+                            r.html.render()
+                            links = r.html.find('a[href*="poster"]')
+                            for link in links:
+                                jobs.append(link)
+
+                        return jobs
             main()
 
         self._jobs = jobs
@@ -159,22 +198,22 @@ class Jobs:
         assert hasattr(self, '_responses'), 'must run scrape_jobs before this method'     
         matches = []
         for poster, response in self._responses:
-            match = f'{self.BASE}{poster}'
+            url = f'{self.BASE}{poster}'
             if '|' in query:
                 queries = query.split('|')
                 if any(q.lower() in response.text.lower() for q in queries):
-                    matches.append(match)
+                    matches.append((url, response))
 
             if '&' in query:
                 queries = query.split('&')
                 if all(q.lower() in response.text.lower() for q in queries):
-                    matches.append(match)
+                    matches.append((url, response))
            
             else:
                 if query.lower() in response.text.lower():
-                    matches.append(match)
+                    matches.append((url, response))
                     
-        self._matches = matches              
+        self._matches = matches
         return matches
 
 
@@ -182,7 +221,15 @@ class Jobs:
         assert hasattr(self, '_matches'), 'must run find method before accessing this method'
         with open(filepath, 'w', newline='') as f:
             writer = csv.writer(f)
-            for row in self._matches:
+            for url, response in self._matches:
                 writer.writerow([row])
         return self
-    
+
+
+    def to_html(self, filepath):
+        assert hasattr(self, '_matches'), 'must run find method before accessing this method'
+        with open(filepath, 'wb') as f:
+            for url, response in self._matches:
+                f.write(response.content)
+        return self
+
