@@ -12,14 +12,17 @@ import time
 from math import ceil
 import asyncio
 import csv
+import os
+import getpass
 
 
 class Jobs:
     BASE = 'https://emploisfp-psjobs.cfp-psc.gc.ca'
     
-    def __init__(self, driver='selenium', headless=True):
+    def __init__(self, driver='selenium', headless=True, login=False):
         self.driver = driver
         self.headless = headless
+        self.login = login
 
     @property
     def urls(self):
@@ -55,6 +58,10 @@ class Jobs:
     
     
     def get_all_jobs(self):
+
+        if self.login:
+            user = input('enter username: ')
+            pwd = getpass.getpass('enter password: ')
         
         jobs = []
                  
@@ -65,6 +72,13 @@ class Jobs:
                 options.add_argument('--headless')
             options.add_experimental_option('useAutomationExtension', False)
             driver = webdriver.Chrome(options=options)
+
+            if self.login:
+                driver.get('https://emploisfp-psjobs.cfp-psc.gc.ca/psrs-srfp/applicant/page1710')
+                driver.find_element_by_css_selector('input#UserNumber').send_keys(user)
+                driver.find_element_by_css_selector('input#Password').send_keys(pwd)
+                driver.find_element_by_name('LOGIN').click()
+            
             driver.get(f'{self.BASE}/psrs-srfp/applicant/page2440?requestedPage=1')
             time.sleep(5)
 
@@ -194,7 +208,7 @@ class Jobs:
         return self
     
 
-    def find(self, query):
+    def find(self, query, printed=True):
         assert hasattr(self, '_responses'), 'must run scrape_jobs before this method'     
         matches = []
         for poster, response in self._responses:
@@ -214,7 +228,14 @@ class Jobs:
                     matches.append((url, response))
                     
         self._matches = matches
-        return matches
+        
+        if printed:
+            for url, response in matches:
+                title = response.html.find('title', first=True).text
+                print(f'{title}: \n\t{url}\n')
+
+        else:
+            return matches
 
 
     def to_csv(self, filepath):
@@ -232,4 +253,3 @@ class Jobs:
             for url, response in self._matches:
                 f.write(response.content)
         return self
-
