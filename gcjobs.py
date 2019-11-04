@@ -14,6 +14,7 @@ import asyncio
 import csv
 import os
 import getpass
+import re
 
 
 class Jobs:
@@ -155,7 +156,7 @@ class Jobs:
             def main():
                 def get_session():
                     s = HTMLSession()
-                    r = s.get('https://emploisfp-psjobs.cfp-psc.gc.ca/psrs-srfp/applicant/page2440?requestedPage=1')
+                    r = s.get(f'{BASE}/psrs-srfp/applicant/page2440?requestedPage=1')
                     r.html.render(sleep=3)
                     return s, r
                 _, r = get_session()
@@ -208,24 +209,31 @@ class Jobs:
         return self
     
 
-    def find(self, query, printed=True):
+    def find(self, query, printed=True, regex=False):
         assert hasattr(self, '_responses'), 'must run scrape_jobs before this method'     
         matches = []
         for poster, response in self._responses:
             url = f'{self.BASE}{poster}'
-            if '|' in query:
-                queries = query.split('|')
-                if any(q.lower() in response.text.lower() for q in queries):
-                    matches.append((url, response))
+            text = response.text.lower()
 
-            if '&' in query:
-                queries = query.split('&')
-                if all(q.lower() in response.text.lower() for q in queries):
+            if regex:
+                if re.findall(query, response.text):
                     matches.append((url, response))
-           
-            else:
-                if query.lower() in response.text.lower():
-                    matches.append((url, response))
+                
+            else:               
+                if '|' in query:
+                    queries = query.split('|')
+                    if any(q.lower() in text for q in queries):
+                        matches.append((url, response))
+
+                if '&' in query:
+                    queries = query.split('&')
+                    if all(q.lower() in text for q in queries):
+                        matches.append((url, response))
+               
+                else:
+                    if query.lower() in text:
+                        matches.append((url, response))
                     
         self._matches = matches
         
